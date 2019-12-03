@@ -1,0 +1,314 @@
+---
+title: "STAT 3340 Assignment 2, Fall 2018"
+author: "James MacPhee"
+date: 'Banner:  B00768516'
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+For question 1, include the appropriate R code and process in markdown.
+
+For questions 2  onward, you can either process in markdown, or include handwritten answers after printing.
+
+A convenient processing option is to knit to html, then print to pdf from the browser's menu.
+If you knit to Word, you will need to have appropriate fonts, etc, available in Word, in order to 
+have the document rendered appropriately.  If you knit to pdf, line spacing may be an issue for questions 2-5.
+
+
+
+1. The length of a species of fish is to be represented as a function
+of the age and water temperature.  The fish are kept in tanks
+at 25, 27, 29 and 31 degrees Celsius.  After birth, a test specimen
+is chosen at random every 14 days and its length measured.
+
+
+```{r}
+data=read.csv("http://bsmith.mathstat.dal.ca/stat3340/Data/fish.csv",header=T)
+age=data[,1]
+temp=data[,2]
+length=data[,3]
+N=dim(data)[1]
+y=length
+X=cbind(rep(1,N),age,temp)
+X[1:3,]
+```
+
+Fit the model $y = \beta_0+\beta_1 x_1 +\beta_2 x_2+\epsilon$ using matrix commands in R.
+
+   + 1a) Calculate and display the 3x3 matrix $X'X$.
+
+```{r}
+xpx= t(X)%*%X
+xpx
+```
+   + 1b) Calculate and display $[X'X]^{-1}$.
+
+```{r}
+xpxi= solve(xpx)
+round(xpxi,5)
+```
+
+   + 1c) Calculate and display $\hat \beta$.
+   (you can check your results with "lm(length~age+temp)"   
+
+```{r}
+betahat = xpxi%*%t(X)%*%y
+
+round(betahat,3)
+lm(length~age+temp)
+```
+
+
+   + 1d) Calculate the predicted values, the residuals, and the error sum of squares.
+Print the error sum of squares.
+
+```{r}
+yhat = X%*%betahat
+resids = y-yhat
+SSE = t(y)%*%y - t(betahat)%*%t(X)%*%y
+SSE
+```
++ 1e) Use the matrix formula $SSR=\hat beta ' %*% X' %*% y - N {\bar y}^2$ to calculate the
+regression sum of squares, and verify that SST=SSE+SSR, up to rounding error. 
+
+
+```{r}
+SST=sum((y-mean(y))^2)
+SSR= t(betahat)%*%t(X)%*%y-N*mean(y)^2
+SSE=SST-SSR
+round(SST-SSE-SSR,3)
+```
+   
+   +  Calculate, but do not print, the projection matrices $\mathbf{H}$, $\mathbf{I}-\mathbf{H}$, $\mathbf{J}/n$, and $\mathbf{I}-\mathbf{J}/n$
+
+```{r}
+k=2
+H=X%*%xpxi%*%t(X)
+I=diag(N)
+ImH=I-H
+ones=matrix(rep(1,N),byrow=T,ncol=1)
+J=(ones%*%t(ones))/N
+```
+
+   + 1f)  Verify, by calculating their inner product, that $\mathbf{H}$ $\mathbf{y}$ and $(\mathbf{I}- \mathbf{H})\mathbf{y}$ are perpendicular. 
+```{r}
+t(H%*%y)%*%(ImH%*%y)
+```
+
+   + 1g)  Verify that $(\mathbf{J}/n)\mathbf{y} = \bar{y}\mathbf{1}$.
+
+```{r}
+diff= mean(y)*ones - J%*%y
+round(diff, 5)
+```
+
+
+2.  For the data $y=(1,2,4)$ and $x=(0,1,2)$,
+
+   + 2a)  To fit the model $y=\beta_0+\beta_1 x + \epsilon$
+   using matrix calculations, what is the appropriate matrix $\mathbf{X}$?
+   
+<br>
+1 0
+<br>
+1 1
+<br>
+1 2
+<br>  
+<br>  
+
+   + 2b)  Calculate the two by two matrix matrix 
+   $\mathbf{X'} \mathbf{X}$.
+   
+<br>  
+3 3
+<br>
+3 5
+<br>  
+<br>  
+
+   
+
+
+   + 2c)  Calculate the  matrix 
+   $[\mathbf{X'} \mathbf{X}]^{-1}$.
+   
+<br>  
+5/6 -1/2
+<br>
+-1/2 1/2
+<br>  
+<br>  
+
+   
+ 
+
+   + 2d)  Calculate the  least squares estimates.
+   
+<br>  
+betahat = (X'X)^(-1)X'y
+<br>
+X'y = [7 10]'
+<br>
+betahat = [5/6 3/2]'
+<br>  
+<br>  
+
+
+3. Suppose $X$, $Y$ and $Z$ are random variables with means
+$\mu_X=1$, $\mu_Y=2$ and $\mu_Z=3$, variances $\sigma^2_X = 9$,
+$\sigma^2_Y = 4$ and $\sigma^2_Z = 1$, and covariances
+$Cov(X,Y) = 3$, $Cov(Y,Z) = 1$ and $Cov(X,Z) = 1.5$. Let $U = X-Y+2Z$ and $V=X+2Y-2Z$.
+
+   + 3a) What is $E(U)$?
+
+   
+<br>  
+E[U] = E[X]-E[Y]+2E[Z] = 1-2+2(3) = 5
+<br>  
+<br>  
+
+   + 3b) What is $Var(U)$?
+
+   
+<br>  
+Var[U]=Var[X]+Var[Y]+4Var[Z]-2Cov[X,Y]+4Cov[X,Z]-4Cov[Y,Z]
+<br>
+Var[U] = 9+4+4(1)-2(3)+4(1.5)-4(1) = 13
+<br>  
+<br>  
+
+   + 3c) What is $Cov(U,V)$?
+
+   
+<br>  
+Cov[U,V] = Cov[X-Y+2Z,X+2Y-2Z] = Cov[X,X]+Cov[X,2Y]+Cov[X,-2Z]+Cov[-Y,X]+Cov[-Y,2Y]+Cov[-Y,-2Z]+Cov[2Z,X]+Cov[2Z,2Y]+Cov[2Z,-2Z]
+<br>
+Cov[U,V] = Var[X]+2Cov[X,Y]-2Cov[X,Z]-Cov[Y,X]-2Var[Y]+2Cov[Y,Z]+2Cov[Z,X]+4Cov[Z,Y]-4Var[X]
+<br>
+Cov[U,V] = 9+2(3)-2(1.5)-3-2(4)+2(1)+2(1.5)+4(1)-4(9) = -26
+<br>  
+<br>  
+
+
+
+4.    In a study of 1006 men in four occupations, a multiple regression was carried out
+to show how lung function was related to age, smoking and occupation.  The four
+occupations represented in the study were physician, firefighter, farm worker,
+and chemical worker.  The variables in the regression were:
+
+$Y$ -  air capacity (ml) that the worker can expire in one second
+
+$X_1$ - age in years
+
+$X_2$ - number of cigarettes smoked per day
+
+$X_3$ - 1 if chemical worker, 0 otherwise
+
+$X_4$ - 1 if farm worker, 0 otherwise
+
+$X_5$ - 1 if firefighter, 0 otherwise 
+
+
+The model $Y=\beta_0+\beta_1 X_1 + \beta_2 X_2 + \beta_3 X_3 + \beta_4 X_4 + \beta_5 X_5 + e$
+was fit to the data with the following result:
+
+$$\hat Y = 4500 - 39 X_1 -9 X_2 - 350 X_3 -380 X_4 -180 X_5$$
+
+After fitting a linear regression model, it was found that $MSE=9$ and 
+$$ ({\mathbf{X'X}})^{-1} = \left [ \begin{array}{c c c c c c}
+    9 &   8  &  7  &  6  &  7   & 7 \\
+    8 &   3  &  5  &  6  &  6   & 1 \\
+    1 &   1  &  7  &  4  &  5   & 6 \\
+    1 &   6  &  9  &  9  &  8   & 3 \\
+    7 &   5  &  5  &  5  &  8   & 8 \\
+    7 &   3  &  4  &  1  &  5   & 4 \\
+\end{array} \right ]$$
+
+   + 4a) Construct a 95\% confidence interval for $\beta_4$. 
+
+   
+<br>  
+<br>  
+<br>  
+<br>  
+<br>  
+<br>  
+
+
+   + 4b) Construct a 95\% prediction interval for $Y$, for a 30 year old 
+physician who does not smoke.
+
+   
+<br>  
+<br>  
+<br>  
+<br>  
+<br>  
+<br>  
+
+
+   + 4c)  Write down a regression model which includes terms for the interaction
+    of age and occupation, and the interaction of age and number of of
+    cigarettes smoked per day.
+
+   
+<br>  
+<br>  
+<br>  
+<br>  
+<br>  
+<br>  
+
+
+5.  Suppose that $Y$ is a random vector with mean vector $(0,0,1)'$, and covariance matrix
+
+$$  \left [ \begin{array}{c c c}
+      1 \,\, 0 \,\, 0\\
+      0 \,\, 2 \,\, 0 \\
+      0 \,\, 0 \,\, 3   \end{array} \right ] $$
+
+  Let $\mathbf b = (0,0,1)'$ and 
+
+$$ \mathbf A = \left [ \begin{array}{c c c}
+      1  \,\, 0  \,\, 0\\
+      0  \,\,0   \,\,2 \\
+      0  \,\, 1  \,\,0   \end{array} \right ] $$
+
+   + 5a) What is the mean of $\mathbf A  \mathbf Y +  \mathbf b$?
+
+
+
+   
+<br>  
+<br>  
+<br>  
+<br>  
+<br>  
+<br>  
+
+
+   + 5b)    What is the covariance matrix of $\mathbf A \mathbf Y + \mathbf b$?
+
+
+   
+<br>  
+<br>  
+<br>  
+<br>  
+<br>  
+<br>  
+
+
+   + 5c)  What is the mean of $\mathbf Y' \mathbf A  \mathbf Y +  \mathbf b$?
+    
+
+   
+<br>  
+<br>  
+<br>  
+<br>  
+<br>  
+<br>  

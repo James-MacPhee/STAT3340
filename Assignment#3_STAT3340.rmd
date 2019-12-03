@@ -1,0 +1,197 @@
+---
+title: "STAT 3340 Assignment 4, Fall 2018"
+author: "James MacPhee"
+date: 'Banner:  B00768516'
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+1.
+```{r}
+yield=c(123,128,166,151,156,150,178,125,112,174,187,117,100,116,153,155,
+168,109,195,158,135,175,140,167,130,132,145,183,176,120,159,142,120,187,
+131,167,155,184,126,168,156,186,185,175,180,138,206,173,147,178,188,154,
+146,176,165,191,193,190,188,169)
+crop=as.factor(rep(c("W","C","S","R"),15))
+fertilizer=as.factor(c(rep("X",20),rep("FS",20),rep("SS",20)))
+```
+
+  a)
+  
+```{r}
+boxplot(yield~crop)
+boxplot(yield~fertilizer)
+```
+
+    
+  b)
+  
+```{r}
+IW=ifelse(crop=="W",1,0)
+IC=ifelse(crop=="C",1,0)
+IS=ifelse(crop=="S",1,0)
+IX=ifelse(fertilizer=="X",1,0)
+IFS=ifelse(fertilizer=="FS",1,0)
+```
+  
+  c) 
+  $y = \beta_0 + \beta_1W + \beta_2C + \beta_3S + \beta_4X + \beta_5Fs + \beta_6WX + \beta_7WFs + \beta_8CX + \beta_9CFs + \beta_{10}SX + \beta_{11}SFs + \epsilon$
+
+  
+  d) 
+  
+```{r}
+ls=lm(yield~IW+IC+IS+IX+IFS+IW*IFS+IC*IFS+IS*IFS+IW*IX+IC*IX+IS*IX)
+anova(ls)
+```
+ 
+ 
+  e)
+  $\H_0: \beta_6=\beta_7=\beta_8=\beta_9=\beta_{10}=\beta_{11}=0$
+  $$
+```{r}
+
+```  
+
+
+  e)
+  Partial F test: $H_0: \beta_7=0$
+  
+```{r}
+partial=lm(wins~rushplays)
+anova(partial)
+```
+  0.002689 < 0.05/2 therefore reject $H_0$.  
+  Both the partial F-test and the T-test on the full model are equivalent. They both test the significance of the variable(s) in question, x7 here, in the model. 
+    
+
+2. Problem 3.2 in Montgomery, Peck, and Vining
+```{r}
+cor(wins,fitted(ls))
+
+```
+  $R=0.8867395, (0.8867395)^2 = 0.07863069=R^2$ 
+    
+    
+3. Problem 3.3 in Montgomery, Peck, and Vining
+  a)
+```{r}
+confint(ls)
+```
+  95% C.I. for $\beta_7$= (0.011855322, 0.376065098)
+
+  b)
+```{r}
+predict(ls,list(passyards=2300,rushplays=56.0,oppyards=2100),interval="confidence")
+```
+  95% C.I. for mean number of games won by a team with given data is $\hat{y}$= (6.436203, 7.996645)
+  
+4. Problem 3.4 in Montgomery, Peck, and Vining  
+    
+  $\hat{y}=17.944319 + 0.048371x_7 -0.006537x_8$  
+  a)  
+  
+```{r}
+ls2=lm(wins~rushplays+oppyards)
+summary(ls2)
+anova(ls2)
+```
+The hypotheses are: $H_0:\beta_7=\beta_8=0$ vs $H_A:\mbox{ one or more of } \beta_7, \beta_8 \ne 0$.
+
+  So we will reject $H_o$ if the F value for any of $\beta_7,\beta_8$ > 15.13 (gotten from above summary)  
+  
+  $\beta_7$: F = 16.437 > 15.13  
+  
+  $\beta_8$: F = 13.832 < 15.13  
+  
+  Therefore we reject $H_o$ in favour of $H_a$ and conclude that there is significant relationship between regression of $\beta_7$ and $\beta_8$  
+    
+  b)  
+```{r}
+summary(ls2)$r.squared
+```
+  $R^2$ = 0.5476628
+```{r}
+summary(ls2)$adj.r.squared
+```  
+  $R^2$adj = 0.5114759  
+  Since these values are lower the previous model (with one more variable) fits the model better with less residuals.  
+    
+  c)  
+```{r}
+confint(ls2)
+```
+  95% C.I. for $\beta_7$= (-0.19716429), 0.293906022)  
+  
+```{r}
+predict(ls2,list(rushplays=56.0,oppyards=2100),interval="confidence")
+```
+  95% C.I. for mean number of games won by a team with given data is $\hat{y}$= (5.828643, 8.023842)    
+  These C.I.'s are wider because they are simply less accurate.  
+      
+  d)  
+  Ommitting an important regressor from the model changes basically every estimate, C.I, correlation coefficients, etc. mainly because it is only a piece of the puzzle without that regressor.  
+    
+    
+5.
+```{r}
+data=read.csv("http://bsmith.mathstat.dal.ca/stat3340/Data/ozone.csv")
+data[1:3,]
+y=as.double(data[,1])
+x1=as.double(data[,2])
+x2=as.character(data[,3])
+surface=data.frame(data[x2=="S",])
+deep=data.frame(data[x2=="D",])
+plot(x1,y,xlab="UV concentration",ylab="percentage growth rate",pch=x2)
+abline(lm(y~x1,data=surface),col="blue")
+abline(lm(y~x1,data=deep),col="red")
+legend(0.00,45,legend=c("surface","deep"),col=c("blue","red"),lty=c(1,1))
+```  
+Defining Z as indicator for x2:
+```{r}
+#I moved it down here for easier reading for me
+Z=ifelse(x2=="S",1,0)
+```
+a)  
+```{r}
+#I had to look up the proper syntax for the semi-colon on x1:Z online, I couldn't find it in the class notes. 
+ls=lm(y~x1+Z+x1:Z)
+summary(ls)
+anova(ls)
+```
+$\hat{y}=1.181 + 1226.389x_1 + 1.278Z - 939.931x_1Z$  
+  
+b)  
+
+```{r}
+ls2=lm(y~x1+x1:Z)
+summary(ls2)
+anova(ls2)
+```
+$\hat{y}=1.373 + 1218.473x_1 - 898.092x_1Z$  
+  
+c)  
+  i)
+    choosing $\beta_2$ because it is what sets the two models apart
+    $H_0: \beta_2=0$
+    $H_A: \beta_2\ne0$
+  ii)  
+    F=(SSE.partial-SSE.full)/MSE.full  
+    ```{r}
+    F=(1015.4-1014.31)/78.02
+    F
+    ```  
+    F=0.01397078  
+    
+  iii)  
+    Numerator df: 1  
+    Denominator df: 13  
+    
+  iV)
+    ```{r}
+    p.value=1-pf(F,1,13)
+    p.value
+    ```
+    p-value = 0.9077176

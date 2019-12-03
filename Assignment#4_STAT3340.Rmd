@@ -1,0 +1,215 @@
+---
+title: "STAT 3340 Assignment 4, Fall 2018"
+author: "James MacPhee"
+date: 'Banner:  B00768516'
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+1.
+```{r}
+yield=c(123,128,166,151,156,150,178,125,112,174,187,117,100,116,153,155,
+168,109,195,158,135,175,140,167,130,132,145,183,176,120,159,142,120,187,
+131,167,155,184,126,168,156,186,185,175,180,138,206,173,147,178,188,154,
+146,176,165,191,193,190,188,169)
+crop=as.factor(rep(c("W","C","S","R"),15))
+fertilizer=as.factor(c(rep("X",20),rep("FS",20),rep("SS",20)))
+```
+
+  a)
+  
+```{r}
+boxplot(yield~crop)
+boxplot(yield~fertilizer)
+```
+The relationships between yield and fertilizer seem to be more correlated and normally distributed than yield and crop. Crops C and R are quite skewwed while all three of the fertilizers seem to be relatively unskewwed.
+  b)
+  
+```{r}
+IW=ifelse(crop=="W",1,0)
+IC=ifelse(crop=="C",1,0)
+IS=ifelse(crop=="S",1,0)
+IX=ifelse(fertilizer=="X",1,0)
+IFS=ifelse(fertilizer=="FS",1,0)
+```
+  
+  c) 
+  $y = \beta_0 + \beta_1IW + \beta_2IC + \beta_3IS + \beta_4IX + \beta_5IFS + \beta_6IWIX + \beta_7IWIFS + \beta_8ICIX + \beta_9ICIFS + \beta_{10}ISIX + \beta_{11}ISIFS + \epsilon$
+
+  
+  d) 
+  
+```{r}
+ls=lm(yield~IW+IC+IS+IX+IFS+IW*IFS+IC*IFS+IS*IFS+IW*IX+IC*IX+IS*IX)
+anova(ls)
+```
+ 
+ 
+  e)
+    i)  
+  $H_0:\beta_6=\beta_7=\beta_8=\beta_9=\beta_{10}=\beta_{11}=0$
+  $H_a:$ At least one of $\beta_6,\beta_7,\beta_8,\beta_9,\beta_{10},\beta_{11}\neq0$
+  
+  ii)
+  $y=\beta_0+\beta_1IW + \beta_2IC + \beta_3IS + \beta_4IX + \beta_5IFS + \epsilon$
+  
+  iii)
+```{r}
+lsred=lm(yield~IW+IC+IS+IX+IFS)
+anova(lsred)
+```  
+  iv) $ $
+```{r}
+F=((27446.3-21220.4)/6)/442.1
+F
+```
+  v) $ $
+```{r}
+p=1-pf(F,6,48)
+p
+```
+  Using the table from the class website the p-value is between .01 and .05
+ 
+ 
+ 
+  2.
+   a)
+    i)
+    $F_{obs}=(((62.12+0.350+0.796)-62.120)/2)/0.441=1.2993197$
+    ii)
+    $F_{obs}$~$F_{2,143}$
+```{r}
+F_obs=((63.266-62.12)/2)/0.441
+p_value=1-pf(F_obs,2,143)
+p_value
+```
+  
+  b)
+  95% CI for cement: $(0.010236-(1.96)(0.001433),0.010236+(1.96)(0.001433))=(0.00742732,0.01304468)$
+    
+    
+3. 
+```{r}
+fish=read.csv('http://bsmith.mathstat.dal.ca/stat3340/Data/fish.csv',header=T)
+age=fish[,1]
+temp=fish[,2]
+length=fish[,3]
+```
+  a)
+```{r}
+lm.fish=lm(length~age+temp,data=fish)
+summary(lm.fish)
+```
+
+  b)
+```{r}
+lm.fishQ=lm(length~age+temp+age*temp+I(age^2)+I(temp^2),data=fish)
+summary(lm.fishQ)
+```
+  c)
+```{r}
+resid.fishQ=resid(lm.fishQ)
+fitted.fishQ=fitted(lm.fish)
+plot(fish,resid.fishQ)
+qqnorm(resid.fishQ)
+```
+  To me the quadratic model seems appropriate. There isn't really any tailing going on or any major skewness. Nothing outside of randomness.
+  
+  d)
+  i)
+  $H_0: \beta_3=\beta_4=\beta_5=0$
+  $H_a: \beta_3,\beta_4,$or$\beta_5\neq0$
+  
+  ii)
+```{r}
+anova(lm.fish)
+anova(lm.fishQ)
+Fobs=((14759878-2150908)/3)/56603
+Fobs
+```
+  iii)
+```{r}
+p.value=1-pf(Fobs,3,38)
+p.value
+```
+  e)
+    i)
+```{r}
+summary(lm.fish)
+anova(lm.fish)
+e1=resid(lm.fish)
+```
+    ii)
+```{r}
+lm.age=lm(I(age^2)~age+temp)
+e2=resid(lm.age)
+```
+    iii)
+```{r}
+lm.resids=lm(e1~e2-1)
+anova(lm.resids)
+```
+    iv)
+```{r}
+lm.full=lm(length~age+temp+I(age^2))
+summary(lm.full)
+anova(lm.full)
+```
+    v)
+```{r}
+lm.full$coefficients
+lm.resids$coefficients
+```
+    vi)
+```{r}
+coef(lm.fish)+coef(lm.resids)*(-coef(lm.age))
+lm.full$coefficients
+```
+    vii)
+```{r}
+anova(lm.full)$Sum
+anova(lm.resids)$Sum
+```
+    As you can see the numbers for SSE are the same in both models: 6372687
+    
+    viii)
+```{r}
+anova(lm.full)$Sum
+anova(lm.resids)$Sum
+```
+    Just like above you can see that the values are the same, except this time instead of looking at SSE we are interested in the SSR (age^2 portion at least): 8387191
+    
+    ix)
+```{r}
+plot(e2,e1,main="Added variable plot for age^2")
+abline(lm.resids)
+```
+  It doesn't seem appropriate to add in the quadratic term now because the data doesn't really follow any trend at all.
+  
+  
+4.
+  a) Answer: yes
+  b) Answer: no
+  c) Answer: yes
+  d) Answer: no
+
+
+5.
+  a)
+  You would compare models 3 and 6.
+  $Fobs=((180-120)/6)/1.31868=7.583341$~$F_{6,91}$
+
+  b)
+  You would compare models 4 and 6.
+  $Fobs=((140-120)/3)/1.237113=5.388891$~$F_{3,91}$
+  
+  c)
+  Obviously compare models 4 and 5. You can't use the F-test because it would lead to a negative value. It is quite hard to compare when you are adding and removing terms  between the two models.
+
+
+6.
+$y=weight$ , $x_1=age$ , $x_2=1 if male and x_2=0 if female$
+$y=\beta_0+\beta_1x_1+\beta_2x_1^2+\beta_3x + \beta_4x_2^2+\beta_5x_1x_2+\epsilon$
+I think this is all the question is asking. I am confused by the wording.

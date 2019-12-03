@@ -1,0 +1,197 @@
+---
+title: "STAT 3340 Assignment 1, Fall 2018"
+author: "James MacPhee"
+date: "B00768516"
+Banner:  "09/24/2018"
+output:
+  word_document: default
+  pdf_document: default
+---
+======================================================================
+
+
+1. Find the equation of the line which passes through the points (1,1) and (4,5).
+
+   $$y=\frac{-1}{3} + \frac{4}{3} x$$
+
+2. Suppose you are given three data points (1,4), (2,6) and (3,7) and the line $y = 1 + 4x$. 
+Give the three residuals and their sum of squares.
+
+    r_1 = -1, r_2 = -3, r_3 = -6
+    $$\sum_{i=1}^3 r_i^2 = 46$$
+
+3. Some data gives the summaries: $n = 10$, $\sum_{i=1}^{10}  x_iy_i = 100$, $\sum_{i=1}^{10} x_i = 20$ and $\sum_{i=1}^{10} y_i = 10$. 
+   Suppose that the response $y$ is temperature in degrees Celcius. 
+
+    + 3.a) $S_{xy}$= 80
+    + 3.b) If the response was converted to temperature in degrees Fahrenheit $y'$, so that $y' = 32+1.8y$, what is $\sum_{i=1}^{10} y'_i$? 32+1.8(10) = 338
+    + 3.c) If the response was converted to temperature in degrees Fahrenheit $y'$, so that $y' = 32+1.8y$, what is $S_{xy'}$? (32(20)+1.8(100))-(20)(338)/10 = 144
+
+
+4. A random sample of 11 elementary school students is selected,
+  and each student is measured on a creativity score (x) using a
+  well-defined testing instrument and on a task score (y) using a new
+  instrument. The task score is the mean time taken to perform several
+  hand-eye coordination tasks. The data are as follows.
+  
+```{r}
+ x=c(35,37,50,69,84,40,29,42,51,45,31)
+ y=c(3.9,3.9,6.1,4.3,8.8,2.1,5.7,3.0,7.1,7.3,3.3)
+ plot(x,y,xlab="Creativity score",ylab="Task score")
+```
+
+ Use R to do the following questions. Make sure to include your commands in the R markdown document.
+ 
+   + 4a) Calculate the summaries $S_{xx}$, $S_{xy}$, $S_{yy}$ and $\bar{X}$ and $\bar{Y}$.
+  
+ 
+```{r}
+N=length(x)
+xbar=sum(x)/N ;  cat("xbar = ", xbar)
+ybar=sum(y)/N ;  cat("ybar = ", ybar)
+Sxx=sum((x-xbar)^2) ; cat("Sxx = ", Sxx)
+Sxy=sum((x-xbar)*(y-ybar)) ; cat("Sxy = ", Sxy)  
+Syy=sum((y-ybar)^2) ; cat("Syy = ", Syy)
+```
+
+   + 4b) Use these summaries to  calculate the least squares estimates of the  intercept and slope.
+  
+```{r}
+ beta1 = Sxy/Sxx ; cat("beta_1 = ", beta1)
+ beta0 = (ybar-beta1*xbar); cat("beta_0 =", beta0)
+```
+  
+   + 4c) Calculate the predicted (fitted) values and the residuals.
+   
+```{r}
+fit=beta0+beta1*x ; cat("Fitted Values: ", fit)
+resids=y-fit ; cat("residuals: ", resids)
+```
+   +  4d) Plot the residuals (y axis) vs fitted values (x axis).
+
+
+```{r}
+ plot(fit,resids,xlab="Fitted Values",ylab="Residuals")
+```
+
+   + 4e) Do the residuals look random? If not, what does the pattern of the residuals suggest?
+   
+   + 4f) Calculate the mean of the residuals
+to verify it is zero (to machine precision), and the correlation of the residuals with $X$ to verify it is also zero.  The R command to calculate
+the correlation between $u$ and $v$ is cor(u,v).
+
+```{r}
+# 4e) Yes very random indeed
+mean(resids)
+cor(resids,x)
+```
+
+  + 4g) Calculate and print the error, regression and total sums of squares, using the data summaries.
+
+```{r}
+SST=Syy ; cat("SST = ", SST)
+SSE= sum(resids)^2 ; cat("SSE = ", SSE)
+SSR=SST-SSE ; cat("SSR = ", SSR)
+```
+
+
+5. The length of a species of fish is to be represented as a function
+of the age and water temperature.  The fish are kept in tanks
+at 25, 27, 29 and 31 degrees Celsius.  After birth, a test specimen
+is chosen at random every 14 days and its length measured.  The data can be entered into R as
+
+```{r}
+fish=read.csv("http://bsmith.mathstat.dal.ca/stat3340/Data/fish.csv",header=T)
+pairs(fish)
+```
+ 
+The pairwise plots don't really give an adequate picture of what is going on.
+The following plot of length vs age, with different temperatures identified
+suggests that growth is impeded by high temperatures.
+
+```{r}
+
+  color=rep("black",dim(fish)[1])
+  color=ifelse(fish$temp==27,"blue", color)
+  color=ifelse(fish$temp==29,"green",color)
+  color=ifelse(fish$temp==31,"brown",color)
+  legend.txt=c("25 degrees","27 degrees","29 degrees","31 degrees")
+
+plot(fish$age,fish$length,col=color,ylab="length",xlab="age",cex=2,pch="*")
+legend(100,2000,legend=legend.txt,text.col=c("black","blue","green","brown"))
+
+```
+
+The multiple regression model $length = \beta_0+\beta_1 age +\beta_2 temp +\epsilon$
+was fit using R, as follows.
+
+
+```{r}
+fish.out=lm(length~age+temp, data=fish)
+summary(fish.out)
+anova(fish.out)
+```
+
+  +  Test for the overall significance of the regression.  
+    
+The hypotheses are: $H_0: \beta_1 = \beta_2 = 0$ vs
+$H_A:\mbox{ one or more of } \beta_1, \beta_2 \ne 0$.
+
+  + 5a) The observed value of the $F$ statistic is 84.98
+  + 5b) The numerator degrees of freedom is 2
+  + 5c) The denominator degrees of freedom is 41
+  + 5d) Calculate the  p-value
+```{r}
+ 1-pf(84.98,2,41)
+```
+
+
+
+  + 5e) Use the lm command to fit a model which includes only the variable age.
+
+```{r}
+ageonly.out = lm (length~age, data=fish)
+summary(ageonly.out)
+```
+
+Test the appropriate hypothesis concerning "temperature".
+
+  + 5f) state the hypotheses:  $H_0: \beta_1 = 0$  vs  $H_A: \beta_1 \ne 0$
+    
+  + 5g) Use the ANOVA command to compare the two models (here fish.out and ageonly.out)
+
+```{r}
+anova(fish.out, ageonly.out)
+```
+
+   + 5g(i)The observed value of the test statistic is 6.9202
+   + 5g(ii) The numerator degrees of freedom is 41
+   + 5g(iii)The denominator degrees of freedom is 42
+   + 5g(iv) Calculate the p-value
+    
+```{r}
+1-pf(6.9202,41,42)
+```
+    
+    
+  + 5h) The model 
+     $$length = \beta_0+\beta_1 age +\beta_2 temp + \beta_3 age*temp +\epsilon$$
+    includes the interaction between temperature and age.  The model
+    is fit in R using "lm(length\~age+temp+age:temp)".  An equivalent
+    model statement is "lm(length\~age*temp)".  Fit this model in R,
+    and then use the "anova" command to carry out the F test of significance of the interaction.
+    
+```{r}
+lm.interac=lm(length~age+temp+age:temp, data=fish)
+anova(lm.interac,fish.out)
+```
+  + 5h(i) The null hypothesis is $H_0: \beta_3$ = 0  
+  + 5h(ii) The alternative hypothesis is $H_A: \beta_3$ \ne 0
+  + 5h(iii) The observed value of F is  3.8858
+  + 5h(iv) The numerator degrees of freedom is 40
+  + 5h(v) The denominator degrees of freedom is 41
+  + 5h(vi) Calculate the p-value.
+
+```{r}
+1-pf(3.8858,40,41)
+```
